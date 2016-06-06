@@ -6,7 +6,7 @@
      :+*=@
      :"hello ruby"
 ###  Symbol和String
-![symbol1](https://github.com/yauralee/my_note/raw/master/ruby_note/ruby/symbol/picture/symbol1.png)
+![symbol1](https://github.com/yauralee/my_note/raw/master/ruby_note/symbol/picture/symbol1.png)
 可以看出相同内容的字符串是不同对象，但一个名字唯一确定一个Symbol对象。创建Symbol对象时不能包含 ' \0 ' 字符。
 
 * **Symbol 转化为 String：**     
