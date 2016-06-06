@@ -16,7 +16,7 @@
         a[3] = 4
         a  #=> [1, 2, nil, 4]
 * Hash以键值对形式存在，一般以字符串或符号作为键。
-* **符号(symbol)：** 与字符串相似，符号也是对象，一般作为名称标签使用，用来表示方法等的对象的名称。符号和字符串之间可以通过to_s和to_sym方法转换。具体参考 [Symbol](http://daringfireball.net/projects/markdown/syntax).
+* **符号(symbol)：** 与字符串相似，符号也是对象，一般作为名称标签使用，用来表示方法等的对象的名称。符号和字符串之间可以通过to_s和to_sym方法转换。具体参考 [Symbol](https://github.com/yauralee/my_note/blob/master/ruby_note/symbol/symbol.md).
 *  **散列：** 创建散列的方法：    
       
          address = {:name => "zs", :postal => "123"}
@@ -1039,9 +1039,7 @@ File对象读取数据部分与不使用块时一样，只是少了最后的clos
 			
 
 
-      
  
-
 	
 
 
