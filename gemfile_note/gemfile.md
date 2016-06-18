@@ -1,5 +1,8 @@
 #Gemfile
-Gemfile是一个用于描述gem间依赖的文件。gem是一堆ruby代码的集合，能够被我们所调用。Gemfile必须放在项目的根目录下， 这是Bundler的要求，对于任何形式的包管理文件来说这也是标准。当在Bundler上下文环境中被执行的时候能够使我们访问一些方法，我们用这些方法来解释gem之间的require关系。
+###RubyGems、Bundler、Gemfile
+1. The RubyGems software allows you to easily download, install, and use ruby software packages on your system. The software package is called a “gem” and contains a package Ruby application or library.                  
+2. Bundler 是管理Gem依赖的工具，执行bundle install时，会根据应用程序目录中Gemfile的设定，检查指定的Gem与想依赖套件是否已安装，如果已安装了Gem，就会显示Using，如果是新下载安装的Gem，就会显示Installing，可以使用`bundle show gemname`可以知道Gem的安装位置。     
+3. Gemfile是一个用于描述gem间依赖的文件。gem是一堆ruby代码的集合，能够被我们所调用。Gemfile必须放在项目的根目录下， 这是Bundler的要求，对于任何形式的包管理文件来说这也是标准。当在Bundler上下文环境中被执行的时候能够使我们访问一些方法，我们用这些方法来解释gem之间的require关系。
 
 ### 创建Gemfile:
 首先要告诉Gemfile去哪里找到gems,即gem的源。             
@@ -198,3 +201,7 @@ _注意：在Bundler 2出来之前，不能使用`:github`这个参数，目前�
 	install_if -> { RUBY_PLATFORM =~ /darwin/ } do
 	  gem "my_osx_gem"
 	end
+	
+###Gemfile和Gemfile.lock间的关系
+1. Gemfile是指定需要使用的哪些gem及其版本的地方；     
+2. Gemfile.lock文件是Bundler记录已经安装了的版本的地方。通过这样的方式，当相同库/项目在另外一台机器上部署的时候，运行bundle install将会查看Gemfile.lock，然后安装同样的版本，而不是使用Gemfile以及安装最新的版本。（在不同的机器上运行不同版本会导致测试的失败……）你不需要直接地更改Gemfile.lock.
