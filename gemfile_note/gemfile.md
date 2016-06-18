@@ -68,7 +68,133 @@ Gemfile是一个用于描述gem间依赖的文件。gem是一堆ruby代码的集
 		  * gem "my_gem", "~> 1.0" –> gem "my_gem", ">= 1.0", "< 2.0"
 		  * gem "my_gem", "~> 1.5.0" –> gem "my_gem", ">= 1.5.0", "< 1.6.0"
 		  * gem "my_gem", "~> 1.5.5" –> gem "my_gem", ">= 1.5.5", "< 1.6.0"
+
+###设置gem被required
+在Rails项目的config/application.rb文件里面有这么一行代码： 
+   
+		Bundler.require(:default, Rails.env)
+意思是require所有没有被放入group里面的gems和所有放入和当前rails环境（RAILS_ENV, development, test, production)同名的group里面的gems。          
+默认方式下，如果你在Gemfile里面包含一个gem，当Bundler.require被调用的时候会被包含进来。               
+
+我们也能通过下面的设置让gem不被包含进来(这样就只能安装这个gem，在使用的时候必须在你的代码里手动的添加`require ‘my_gem’`来调用my_gem里面的方法了。因为并不是所有的地方都需要使用这个gem，比如在rake task里面使用了my_gem, 而其他地方没有使用，故你只需要在这个gem require到task里面，避免了所有的进程都把这个gem加载进去）
+
+    gem "my_gem", require: false
+也可以指定哪些文件夹被required的，如下： 
+
+    gem "my_gem", require: ["my_gem/specific_module/my_class", "my_gem"]
+这点在当gem有很多功能的，必须每次手动require的时候非常有用。
+###gem分组
+一个gem可以属于一个或多个group，当它不属于任何group的时候，就被放入了:default group。有两种方法可以对一个gem分组。       
+1. 第一种是对group属性进行赋值，如下所示：
+
+		gem "my_gem", group: :development
+意思是，这个gem只在development环境下被require。这也意味着当在安装gems的时候，可以指定某个group下面的gems不被安装，这样在一定程度上能加快gem的安装。
+
+		bundle install --without development test
+上面的意思是安装除development和test group意外的所有gems。       
+2. 第二种gem分组的方法就是你可以将gems放入一个block里面，如下所示：
 		
+		group :development do
+		   gem "my_gem"
+		   gem "my_other_gem"
+		end
+并且也可以设置多个group。
+		
+		group :development, :test do
+		  gem "my_gem"
+		  gem "my_other_gem"
+		end
+如果想让某个group变成可选的形式，也可以像下面这样，设置optional: true        
 
+		group :development, optional: true do
+		  gem "my_gem"
+		  gem "my_other_gem"
+		end		
+当上面被设置时，为了安装development group下面的gems，需要运行
 
+		bundle install —with development
 
+###设置gem的平台
+
+如果某个gem只能在某个平台上使用，也可以在gemfile里面设置。平台的原理和group很类似，不同的是不需要去通过`—without`这样的option去指定，它会自动根据平台判断执行。
+
+	gem "my_gem", platform: :jrubygem "my_other_gem", platform: [:ruby, :mri_18]
+
+下面是一个不同平台的list:      
+
+	  * ruby – C Ruby (MRI) or Rubinius, but not Windows
+	  * ruby_18 to ruby_22 – ruby & (version 1.8 .. version 2.2)
+	  * mri – Same as ruby, but not Rubinius
+	  * mri_18 to mri_22 – mri & (version 1.8 .. version 2.2)
+	  * rbx – Same as ruby, but only Rubinius (not MRI)
+	  * jruby – JRuby
+	  * mswin – Windows
+	  * mingw – Windows 32 bit mingw32 platform (aka RubyInstaller)
+	  * mingw_18 to mingw_22 – mingw & (version 1.8 .. version 2.2)
+	  * x64_mingw – Windows 64 bit mingw32 platform
+	  * x64_mingw_20 to x64_mingw_22 – x64_mingw & (version 2.0 .. version 2.2)
+	
+使用block语法来使用platform设定:
+
+		platforms :jruby do
+		  gem "my_gem"
+		  gem "my_other_gem"
+		end
+		
+###设置gem的源
+设置gem的源，如下所示:       
+
+	gem "my_gem", source: "https://my_awesome_gemsite.com"
+
+如果这个my_gem 在source里面找不到的话，Bundler也不会去default的源里面找，所以找不到的情况下这个gem就不会被安装。           
+###从git安装gem
+可以设置gem的安装源为一个git repo，比如GitHub, 只需要source属性替换为git。可以设置这个repo的链接为HTTP(S), SSH, GIT等协议，但最好使用HTTP(S)和SSH，因为其他的可能受到man-in-the-middle的攻击。如果把gem放入到repo里面，则必须要在repo根目录文件夹下面有一个`.gemspec` 文件。这里面需要包含一个合法gem的声明。如果没有提供这个文件，Bundler会尝试创建一个，但是它不会被依赖。如果去include一个没有提供`.gemspec`文件的git repo里面的gem，则必须指定一个版本号。         
+可以为gem设置branch，tag，ref，默认是使用master branch。也可以强制Bundler扩展submodule，通过以下方式来设置：
+
+	gem "my_gem", git: "ssh@githib.com/tosbourn/my_gem", branch: test_branch, submodules: true
+	
+如果有多个gem来自同一个git repo，也可以通过下面block形式组织起来。          
+
+	git "git@github.com:tosbourn/my_gems.git" do
+	  gem "my_gem"
+	  gem "my_other_gem"
+	end
+
+###设置Git作为source
+可以设置一个URL来作为一个更广义的源，通过调用`#git_source`方法并将name作为参数传进去，以及一个接收一个参数的block，并返回一个string作为repo的URL。如下所示：
+
+	git_source(:custom_git){ |repo| "https://my_secret_git_repos.com/#{repo}.git" }
+	gem "my_gem", custom_git: "tosbourn/test_repo"
+	
+###BitBucket和Github的helper method
+因为BitBucket和Github都是比较流行的git repo host，所以有两者的helper method。在两者里面，Bundler都默认repo是public的。
+
+	gem "my_gem", github: "tosbourn/my_gem"
+	gem "my_gem", bitbucket: "tosbourn/my_gem"
+也可以设置两者的branch。当用户名和repo名字一致的时候，可以省略一个。       
+
+	gem "rails", github: "rails"
+	gem "rails", bitbucket: "rails"
+
+_注意：在Bundler 2出来之前，不能使用`:github`这个参数，目前它是使用git://协议的，就是前面讲过的可能会受到man-in-the-middle攻击的。还有一个`helper :gist`, 如果Github上是以gist的形式存放的话就能够使用它。可以只使用gist ID作为path，也可以像`:github, :bitbucket`那样传入:branch参数。_
+
+	gem "my_gem", :gist => "5935162112", branch: "my_custom_branch"
+	
+###用path包含本地Gem
+可以通过传入:path参数来依赖本地的gems。
+
+	gem "my_gem", :path => "../my_path/my_gem"
+
+如果传入一个相对路径，这个路径是相对于Gemfile路径的。如果想把某个文件夹下所有的gems都包含进去的话，可以使用如下的block。
+
+	path "../my_path/gems" do
+	  gem "my_gem"
+	  gem "my_other_gem"
+	end
+
+###选择性的安装gems
+有时候想在某个前提条件被满足的情况下安装这个gem，比如系统里面是否有某个程序。下面这个方法能够接收一个proc或lambda，下面的例子将在系统是mac的时候安装这个gem:
+	
+	install_if -> { RUBY_PLATFORM =~ /darwin/ } do
+	  gem "my_osx_gem"
+	end
